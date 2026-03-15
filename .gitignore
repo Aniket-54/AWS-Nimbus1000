@@ -1,0 +1,5 @@
+lambda_packages/*.zip
+__pycache__/
+*.pyc
+.env
+lambda_packages/*.zip
