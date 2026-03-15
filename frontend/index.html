@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HireAI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="app-body">
+
+  <!-- Sticky Nav -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon-sm">&#9670;</span>
+      <span class="brand-name-sm">HireAI</span>
+    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#prompt"    class="nav-link active" data-section="prompt">Prompt</a></li>
+      <li><a href="#results"   class="nav-link"        data-section="results">Results</a></li>
+      <li><a href="#candidate" class="nav-link"        data-section="candidate">Candidate</a></li>
+      <li><a href="#dashboard" class="nav-link"        data-section="dashboard">About</a></li>
+    </ul>
+    <div class="nav-search">
+      <input type="text" id="searchBar" placeholder="&#128269; Search candidates..." />
+    </div>
+  </nav>
+
+  <!-- ── SECTION 1: Prompt / Upload ── -->
+  <section id="prompt" class="section section-prompt">
+    <div class="section-inner">
+      <h2 class="section-title">Upload &amp; Prompt</h2>
+      <p class="section-sub">Upload a CSV or PDF of resumes and describe what you're looking for</p>
+
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="csvInput" accept=".csv,.pdf" hidden />
+        <div class="upload-box" id="uploadBox">
+          <span class="upload-icon">&#128196;</span>
+          <p>Drag &amp; drop your CSV or PDF here, or <span class="upload-link" id="uploadTrigger">browse</span></p>
+          <p class="upload-hint">Supports Kaggle resume CSV &amp; individual PDF resumes</p>
+        </div>
+        <div class="file-chosen" id="fileChosen" style="display:none">
+          <span id="fileName"></span>
+          <button class="btn-clear" id="clearFile">&#10005;</button>
+        </div>
+      </div>
+
+      <div class="prompt-box">
+        <label for="promptInput">Instructions / Job Description</label>
+        <textarea id="promptInput" rows="5"
+          placeholder="e.g. Find the top 10 software engineers with Python and AWS experience, 3+ years, ignore name and gender..."></textarea>
+      </div>
+
+      <button class="btn-analyse" id="analyseBtn">&#9889; Analyse Candidates</button>
+    </div>
+  </section>
+
+  <!-- ── SECTION 2: Results ── -->
+  <section id="results" class="section section-results">
+    <div class="section-inner">
+      <h2 class="section-title">Ranked Results</h2>
+      <p class="section-sub">Candidates ranked by AI score — click a row to view full profile</p>
+      <div class="results-table-wrap">
+        <table class="results-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Candidate ID</th>
+              <th>Role</th>
+              <th>Experience</th>
+              <th>Skills</th>
+              <th>AI Score</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <tr class="empty-row">
+              <td colspan="6">No results yet — upload a CSV and run analysis above.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION 3: Candidate Detail ── -->
+  <section id="candidate" class="section section-candidate">
+    <div class="section-inner">
+      <h2 class="section-title">Candidate Profile</h2>
+      <p class="section-sub">Select a candidate from Results, or search by name / skill below</p>
+
+      <div class="cand-search-wrap">
+        <input type="text" id="candidateSearch" placeholder="&#128269; Search by name, skill, role..." />
+        <div class="cand-search-results" id="candSearchResults"></div>
+      </div>
+
+      <div class="candidate-card" id="candidateCard">
+        <p class="no-selection">Select a candidate from the Results section or search above to view their profile.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION 4: About HireAI ── -->
+  <section id="dashboard" class="section section-dashboard">
+    <div class="section-inner">
+      <h2 class="section-title">How HireAI Works</h2>
+      <p class="section-sub">Built for the AWS Hackathon — here's what makes this system different</p>
+
+      <div class="dash-hero">
+        <div class="dash-hero-icon">&#9670;</div>
+        <div>
+          <h3>AI-Powered Recruitment Screening</h3>
+          <p>HireAI uses Amazon Bedrock to semantically analyse resumes against a job description — not just keyword matching. It understands context, infers skill levels, and ranks candidates by true fit.</p>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+
+        <div class="dash-card">
+          <div class="dash-card-icon">&#127919;</div>
+          <h4>What Sets Us Apart</h4>
+          <ul>
+            <li>Semantic understanding via Amazon Bedrock — reads intent, not just words</li>
+            <li>Natural language job descriptions — no rigid form filling</li>
+            <li>Unbiased by design — names, gender, and age are stripped before scoring</li>
+            <li>Scores every candidate with a transparent AI reasoning summary</li>
+            <li>Works on bulk CSV or individual PDF resumes</li>
+          </ul>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-icon">&#128203;</div>
+          <h4>Duplicate Detection</h4>
+          <ul>
+            <li>Fingerprints each resume using a hash of normalised content</li>
+            <li>Detects re-submissions with minor edits (extra spaces, punctuation swaps)</li>
+            <li>Flags near-duplicates using similarity scoring — not just exact matches</li>
+            <li>Only the highest-scoring version of a duplicate is kept in the ranked list</li>
+            <li>Duplicate count is surfaced in the results so reviewers stay informed</li>
+          </ul>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-icon">&#9999;&#65039;</div>
+          <h4>Whitespace &amp; Formatting Abuse</h4>
+          <ul>
+            <li>All text is normalised before analysis — excess whitespace, tabs, and line breaks are collapsed</li>
+            <li>Hidden text tricks (white-on-white keywords) are neutralised at parse time</li>
+            <li>PDF text extraction strips formatting metadata, leaving only readable content</li>
+            <li>Scores are based on semantic meaning, so padding with irrelevant keywords doesn't help</li>
+          </ul>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-icon">&#128272;</div>
+          <h4>Anti-Cheating Measures</h4>
+          <ul>
+            <li>Keyword stuffing is penalised — Bedrock detects unnatural skill density</li>
+            <li>Experience claims are cross-validated against described responsibilities</li>
+            <li>Suspiciously high skill counts relative to experience years are flagged</li>
+            <li>Each candidate gets a confidence score alongside their AI score</li>
+            <li>Reviewers see a plain-English reason for every score — nothing is a black box</li>
+          </ul>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-icon">&#9729;&#65039;</div>
+          <h4>AWS Architecture</h4>
+          <ul>
+            <li>Amazon Bedrock — LLM inference for resume analysis</li>
+            <li>AWS Lambda — serverless processing per resume</li>
+            <li>Amazon S3 — resume file storage</li>
+            <li>Amazon DynamoDB — candidate records and scores</li>
+            <li>All processing is stateless and scales to thousands of resumes</li>
+          </ul>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-icon">&#128202;</div>
+          <h4>Scoring Methodology</h4>
+          <ul>
+            <li>Skills match (40%) — how well skills align with the job description</li>
+            <li>Experience relevance (30%) — years and domain match</li>
+            <li>Responsibility depth (20%) — quality of described work, not just titles</li>
+            <li>Consistency (10%) — coherence between claimed skills and actual experience</li>
+            <li>Final score is 0–100, with a written justification per candidate</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
