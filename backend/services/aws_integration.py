@@ -37,6 +37,28 @@ class S3Client:
         except ClientError as e:
             print(f"Error uploading to S3: {e}")
             return None
+    
+    def upload_resume_content(self, file_content, candidate_id):
+        """
+        Upload resume content (bytes) to S3
+        Args:
+            file_content: PDF file content as bytes
+            candidate_id: Unique candidate identifier
+        Returns:
+            S3 object key if successful, None otherwise
+        """
+        try:
+            object_key = f"{S3_RESUME_PREFIX}{candidate_id}.pdf"
+            self.s3.put_object(
+                Bucket=self.bucket,
+                Key=object_key,
+                Body=file_content,
+                ContentType='application/pdf'
+            )
+            return object_key
+        except ClientError as e:
+            print(f"Error uploading content to S3: {e}")
+            return None
 
     def download_resume(self, object_key, local_path):
         """
