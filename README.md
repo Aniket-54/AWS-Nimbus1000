@@ -12,4 +12,3 @@ Requisites:
   6) MCO: For documentation purposes. Helps Kiro correctly configure our AWS service.
 Add features like unbiased scanning where it removes the name, the gender and such.
      
-i am Surya 
