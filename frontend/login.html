@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HireAI – Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="login-body">
+  <div class="login-container">
+    <!-- Left branding panel -->
+    <div class="login-left">
+      <div class="brand">
+        <div class="brand-icon">&#9670;</div>
+        <h1 class="brand-name">HireAI</h1>
+      </div>
+      <p class="tagline">Smarter Hiring,<br/>Faster Decisions.</p>
+      <p class="sub-tagline">AI-powered recruitment screening that finds the best talent — fast.</p>
+      <div class="aws-badge">
+        <span>&#9729;</span> Powered by AWS &amp; Amazon Bedrock
+      </div>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="login-right">
+      <div class="login-card">
+        <h2>Welcome back</h2>
+        <p class="login-sub">Sign in to your HireAI account</p>
+        <form id="loginForm">
+          <div class="field-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="you@company.com" required />
+          </div>
+          <div class="field-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn-login">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
