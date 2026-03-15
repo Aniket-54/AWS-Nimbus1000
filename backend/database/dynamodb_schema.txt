@@ -1,1 +1,54 @@
-...
+DynamoDB Schema Design for Recruitment Assistant
+================================================
+
+Table Name: Candidates
+Primary Key: candidate_id (String) - Partition Key
+Sort Key: None (Single-table design)
+
+Attributes:
+-----------
+candidate_id: String (UUID) - Unique identifier
+email: String - Candidate email
+full_name: String - Candidate full name
+skills: List<String> - Array of candidate skills
+degree_names: List<String> - Educational degrees
+major_field_of_studies: List<String> - Fields of study
+positions: List<String> - Previous job positions
+responsibilities: String - Job responsibilities description
+job_position_name: String - Current/target position
+created_at: String (ISO 8601) - Timestamp
+updated_at: String (ISO 8601) - Timestamp
+resume_s3_key: String - S3 object key for resume PDF (future)
+
+Global Secondary Indexes (GSI):
+-------------------------------
+1. SkillIndex
+   - Partition Key: skill (String)
+   - Sort Key: candidate_id (String)
+   - Purpose: Query candidates by specific skill
+
+2. PositionIndex
+   - Partition Key: job_position_name (String)
+   - Sort Key: created_at (String)
+   - Purpose: Query candidates by target position
+
+Table Settings:
+--------------
+- Billing Mode: On-Demand (for variable workload)
+- Point-in-time Recovery: Enabled
+- Encryption: AWS managed keys (SSE)
+
+Future Enhancements:
+-------------------
+- Add DynamoDB Streams for real-time analytics
+- Integrate with Lambda for automatic indexing
+- Use DynamoDB TTL for archiving old applications
+- Add search_history table for query analytics
+
+AWS Integration Points:
+----------------------
+- Lambda: CRUD operations via boto3
+- S3: Store resume PDFs, reference via resume_s3_key
+- Cognito: User authentication for HR teams
+- API Gateway: RESTful API endpoints
+- CloudWatch: Monitor table metrics and Lambda logs
