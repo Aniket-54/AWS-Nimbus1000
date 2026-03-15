@@ -1,0 +1,264 @@
+================================================================
+PROJECT OVERVIEW - AWS-Nimbus1000 Recruitment Assistant
+================================================================
+Last Updated: March 15, 2026
+Project Type: AWS Hackathon - HR Recruitment Screening Tool
+Dataset: https://www.kaggle.com/datasets/saugataroyarghya/resume-dataset
+================================================================
+
+
+----------------------------------------------------------------
+WHAT THIS PROJECT IS
+----------------------------------------------------------------
+A recruitment assistant that helps HR teams screen large volumes
+of job applications efficiently. Instead of manually reading
+hundreds of resumes, HR staff can type a job description and
+the system returns the top 10 best-matching candidates, ranked
+by how well their skills and experience align with the role.
+
+The system currently runs locally using a CSV dataset. It is
+designed and structured to be deployed on AWS when ready.
+
+
+----------------------------------------------------------------
+PROJECT STRUCTURE
+----------------------------------------------------------------
+
+AWS-Nimbus1000/
+├── backend/                  → All Python backend logic
+│   ├── api/                  → Lambda entry point (API layer)
+│   ├── query_parser/         → Extracts skills from job descriptions
+│   ├── services/
+│   │   ├── data_loader/      → Loads candidate data from CSV
+│   │   ├── job_matcher/      → Skill matching + semantic similarity
+│   │   ├── ranking_engine/   → Scores and ranks candidates
+│   │   ├── resume_parser/    → Extracts skills from resume text
+│   │   ├── aws_integration.py → S3, Textract, Bedrock wrappers
+│   │   └── auth_service.py   → Cognito authentication wrapper
+│   ├── database/             → DynamoDB schema + client
+│   ├── config.py             → All configuration in one place
+│   ├── requirements.txt      → Python dependencies
+│   └── test_local.py         → Local test runner
+├── data/
+│   ├── resume_data.csv       → Candidate dataset (from Kaggle)
+│   └── unique_skills.csv     → Dictionary of known skills
+├── frontend/
+│   └── react-app.tsx         → Frontend (placeholder, not built yet)
+├── infrastructure/
+│   └── terraform_or_cdk.txt  → Infrastructure notes (placeholder)
+└── scripts/
+    └── preprocessing/        → Data preprocessing scripts
+
+
+----------------------------------------------------------------
+WHAT HAS BEEN BUILT (COMPLETED)
+----------------------------------------------------------------
+
+1. QUERY PARSER  (backend/query_parser/query_parser.py)
+   - Takes a job description string as input
+   - Uses regex to extract skill keywords from the text
+   - Handles special tech names like C++, C#, .NET, Node.js
+   - Removes duplicates and filters single-character noise
+   - Planned upgrade: Amazon Bedrock for smarter NLP parsing
+
+2. DATASET LOADER  (backend/services/data_loader/dataset_loader.py)
+   - Reads the candidate CSV file (data/resume_data.csv)
+   - Checks if the file exists before loading, raises clear error if not
+   - Returns all candidates as a list of dictionaries
+   - Planned upgrade: Replace CSV reads with DynamoDB queries
+
+3. SKILL EXTRACTOR  (backend/services/resume_parser/skill_extractor.py)
+   - Loads a dictionary of known skills from unique_skills.csv
+   - Scans resume text and finds which known skills appear in it
+   - Case-insensitive matching, handles NaN/empty values
+   - Planned upgrade: AWS Textract to parse PDF resumes
+
+4. SKILL MATCHER  (backend/services/job_matcher/matcher.py)
+   - Compares a candidate's skills against the required skills
+   - Handles skills stored as Python list strings (e.g. "['Python','Java']")
+     or plain comma-separated strings
+   - Returns a score from 0.0 to 1.0 (percentage of required skills matched)
+   - Planned upgrade: Amazon Bedrock for semantic skill matching
+
+5. SIMILARITY ENGINE  (backend/services/job_matcher/similarity_engine.py)
+   - Uses spaCy NLP to compute semantic similarity between:
+     → Candidate's responsibilities/experience text
+     → The job description keywords
+   - Goes beyond exact keyword matching — understands context
+   - Falls back to word-overlap scoring if spaCy is not installed
+   - Falls back to smaller spaCy model if medium model is unavailable
+   - Planned upgrade: Amazon Bedrock embeddings for better accuracy
+
+6. RANKING ENGINE  (backend/services/ranking_engine/ranker.py)
+   - Combines skill match score and semantic similarity into one final score
+   - Formula: Final Score = (0.6 × Skill Match) + (0.4 × Semantic Similarity)
+   - Weights are configurable (not hardcoded)
+   - Sorts all candidates by final score, highest first
+   - Attaches individual score breakdown to each candidate record
+   - Planned upgrade: Store results in DynamoDB for analytics
+
+7. LAMBDA HANDLER  (backend/api/search_candidates_lambda.py)
+   - The main entry point for the whole system
+   - Two modes:
+     → service(query): Direct Python call for local testing
+     → lambda_handler(event, context): AWS Lambda / API Gateway call
+   - Accepts query via JSON body or query string parameters
+   - Returns top 10 ranked candidates as JSON
+   - Proper HTTP status codes (200, 400, 500)
+
+8. CONFIGURATION  (backend/config.py)
+   - All settings in one file, driven by environment variables
+   - Covers: AWS region, DynamoDB table name, S3 bucket name,
+     Bedrock model ID, Cognito pool IDs, ranking weights, file paths
+   - Safe defaults for local development
+
+9. AWS INTEGRATION WRAPPERS  (backend/services/aws_integration.py)
+   - S3Client: upload/download resumes, generate presigned URLs
+   - TextractClient: extract text from PDF documents stored in S3
+   - BedrockClient: generate embeddings, semantic search
+   - All wrappers are written and ready — just need real AWS credentials
+     and the services to be enabled
+
+10. DYNAMODB CLIENT  (backend/database/dynamodb_client.py)
+    - CRUD operations for candidate records
+    - Batch write support for migrating CSV data to DynamoDB
+    - Schema defined in dynamodb_schema.txt
+
+11. AUTH SERVICE  (backend/services/auth_service.py)
+    - Cognito authentication wrapper for HR user login
+    - Token verification logic ready
+
+12. LOCAL TEST SCRIPT  (backend/test_local.py)
+    - Tests every component: query parser, data loader, skill matcher,
+      similarity engine, ranker, and the full Lambda handler
+    - Run with: python backend/test_local.py
+
+13. DATA FILES
+    - data/resume_data.csv: The candidate dataset from Kaggle
+    - data/unique_skills.csv: Dictionary of skills used for extraction
+    - scripts/preprocessing/preprocessing.py: Data cleaning pipeline
+    - scripts/preprocessing/test_pipeline.py: Pipeline tests
+
+
+----------------------------------------------------------------
+HOW THE SYSTEM WORKS (END TO END)
+----------------------------------------------------------------
+
+Step 1: HR user types a job description
+        e.g. "Python developer with AWS and machine learning experience"
+
+Step 2: Query Parser extracts skill keywords
+        → ["python", "developer", "aws", "machine", "learning", "experience"]
+
+Step 3: Dataset Loader reads all candidates from CSV
+
+Step 4: For each candidate, the Ranker calculates:
+        a) Skill Match Score — how many required skills does this
+           candidate have? (exact keyword match)
+        b) Similarity Score — how similar is their experience text
+           to the job description? (spaCy semantic similarity)
+        c) Final Score = (0.6 × skill match) + (0.4 × similarity)
+
+Step 5: All candidates are sorted by Final Score, highest first
+
+Step 6: Top 10 candidates are returned with their scores
+
+
+----------------------------------------------------------------
+WHAT IS NOT BUILT YET (PLANNED / FUTURE)
+----------------------------------------------------------------
+
+- Frontend UI (react-app.tsx is a placeholder with no code)
+- Infrastructure as Code (terraform_or_cdk.txt is a placeholder)
+- Real AWS deployment (Lambda, API Gateway, DynamoDB, S3 not live yet)
+- Amazon Bedrock integration (wrappers exist, not connected)
+- AWS Textract for PDF resume parsing (wrapper exists, not connected)
+- Cognito authentication (wrapper exists, not connected)
+- Unbiased scanning feature (removing name, gender from screening)
+  — this was listed as a desired feature in the README but not built
+
+
+----------------------------------------------------------------
+AWS SERVICES PLANNED (NOT YET ACTIVE)
+----------------------------------------------------------------
+
+Service         | Purpose
+----------------|--------------------------------------------------
+AWS Lambda      | Run the backend as a serverless function
+API Gateway     | Expose Lambda as a REST API endpoint
+DynamoDB        | Replace CSV with a scalable candidate database
+S3              | Store resume PDF files
+AWS Textract    | Extract text from PDF resumes
+Amazon Bedrock  | Advanced NLP, semantic search, embeddings
+Amazon Cognito  | HR user authentication and login
+CloudWatch      | Logging, monitoring, and alerting
+
+
+----------------------------------------------------------------
+HOW TO RUN LOCALLY
+----------------------------------------------------------------
+
+1. Install dependencies:
+   pip install -r backend/requirements.txt
+
+2. Download spaCy language model:
+   python -m spacy download en_core_web_md
+
+3. Run the test script:
+   python backend/test_local.py
+
+4. Or use directly in Python:
+   from backend.api.search_candidates_lambda import service
+   results = service("Python developer with machine learning")
+   print(results)
+
+
+----------------------------------------------------------------
+DEPENDENCIES (backend/requirements.txt)
+----------------------------------------------------------------
+
+pandas       → Reading and processing CSV data
+spacy        → NLP and semantic similarity scoring
+boto3        → AWS SDK (S3, DynamoDB, Textract, Bedrock, Cognito)
+botocore     → AWS core library (used by boto3)
+python-lambda → Helper for packaging Lambda deployments
+
+
+----------------------------------------------------------------
+SCORING ALGORITHM DETAIL
+----------------------------------------------------------------
+
+Skill Match (weight: 60%)
+  - Candidate skills are parsed from their resume record
+  - Required skills come from the parsed job description
+  - Score = number of matched skills / number of required skills
+  - Result: 0.0 (no match) to 1.0 (all skills matched)
+
+Semantic Similarity (weight: 40%)
+  - Uses spaCy's en_core_web_md word vector model
+  - Compares candidate's responsibilities text vs job description
+  - Captures meaning beyond exact keywords
+    e.g. "machine learning" and "ML" would score as similar
+  - Result: 0.0 (completely different) to 1.0 (identical meaning)
+
+Final Score = (0.6 × Skill Match) + (0.4 × Semantic Similarity)
+  - Candidates sorted descending by Final Score
+  - Top 10 returned
+
+
+----------------------------------------------------------------
+DOCUMENTATION FILES IN THE REPO
+----------------------------------------------------------------
+
+README.md                  → Project overview and goals
+backend/README_BACKEND.md  → Detailed backend architecture docs
+backend/DEPLOYMENT.md      → Step-by-step AWS deployment guide
+backend/FIXES_APPLIED.md   → Log of all bugs fixed and improvements made
+backend/QUICK_START.md     → Quick start guide
+backend/SUMMARY.md         → (Empty — not yet written)
+PROJECT_OVERVIEW.txt       → This file
+
+
+================================================================
+END OF OVERVIEW
+================================================================
